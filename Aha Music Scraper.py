@@ -1,5 +1,6 @@
 import time, datetime, webbrowser, openpyxl, sys
 import tkinter as tk
+from tkinter import ttk
 import pandas as pd
 from pathlib import Path
 
@@ -33,38 +34,35 @@ class MyGUI:
         self.textbox.pack(padx=10, pady=10)
 
         # Check for file button
-        self.btn_check_file = tk.Button(self.root, text='Check for file', font=('Arial', 12), command=self.find_file)
+        self.btn_check_file = ttk.Button(self.root, text='Check for file', command=self.find_file)
         self.btn_check_file.place(x=10, y=65, height=25, width=110)
 
         # Convert CSV button
-        self.btn_convCSV = tk.Button(self.root, text='Convert to xlsx', font=('Arial', 12),
-                                     command=self.convert_xlsx, state='disabled')
+        self.btn_convCSV = ttk.Button(self.root, text='Convert to xlsx', command=self.convert_xlsx, state='disabled')
         self.btn_convCSV.place(x=120, y=65, height=25, width=120)
 
         # Start iterating through songs button
-        self.btn_start = tk.Button(self.root, text='Start', font=('Arial', 12), command=self.read_songs,
-                                   state='disabled')
+        self.btn_start = ttk.Button(self.root, text='Start', command=self.read_songs, state='disabled')
         self.btn_start.place(x=270, y=65, height=25, width=60)
 
         # Open song in AHA music
-        self.btn_open_aha = tk.Button(self.root, text='AHA', font=('Arial', 12), command=self.open_aha,
-                                       state='disabled')
+        self.btn_open_aha = ttk.Button(self.root, text='AHA', command=self.open_aha, state='disabled')
         self.btn_open_aha.place(x=340, y=65, height=25, width=50)
 
         # Attempt to open song in youtube search (AHA removed the functionality)
-        self.btn_open_yt = tk.Button(self.root, text='YT', font=('Arial', 12), command=self.open_ytsearch,
-                                       state='disabled')
+        self.btn_open_yt = ttk.Button(self.root, text='YT', command=self.open_ytsearch, state='disabled')
         self.btn_open_yt.place(x=390, y=65, height=25, width=50)
 
         # Next song button
-        self.btn_next = tk.Button(self.root, text='Next song', font=('Arial', 12), command=self.next_song,
-                                  state='disabled')
+        self.btn_next = ttk.Button(self.root, text='Next song', command=self.next_song, state='disabled')
         self.btn_next.place(x=340, y=95, height=25, width=100)
 
         # Delete song from file button
-        self.btn_rem_song = tk.Button(self.root, text='Delete song from file', font=('Arial', 10), fg='red',
-                                      command=self.delete_song, state='disabled')
-        self.btn_rem_song.place(x=310, y=170, height=20, width=130)
+        self.style = ttk.Style()
+        self.style.configure('del.TButton', font=('Arial', 8), foreground='red')
+        self.btn_rem_song = ttk.Button(self.root, text='Delete song from file', style='del.TButton', 
+            command=self.delete_song, state='disabled')
+        self.btn_rem_song.place(x=320, y=170, height=22, width=120)
 
         self.label_csv = tk.Label(self.root, text='CSV:', font=('Arial', 8))
         self.label_csv.place(x=10, y=100)
@@ -156,42 +154,17 @@ class MyGUI:
             if song_index > 1:
                 break
             else:
-                artist = row[1].value
-                song_name = row[2].value
+                artist = row[2].value
+                song_name = row[1].value
                 url = row[5].value
                 source = row[4].value
                 print(f'{artist}: {song_name}\n{url}\n{source}')
 
-            self.write_to_textbox(f'{artist}: {song_name}   {song_index}/{max_rows-1}\n{url}\n{source}')
+            self.write_to_textbox(f'{song_name}: {artist}   {song_index}/{max_rows-1}\n{url}\n{source}')
             self.enable_file_buttons()
             song_index += 1
 
         self.btn_start.config(state='disabled')
-
-    def open_aha(self):
-        wb = openpyxl.load_workbook(our_file + ".xlsx")
-        sheet = wb.active
-        url = sheet.cell(row=song_index, column=6).value
-
-        if url is not None:
-            webbrowser.open(url)
-        else:
-            self.write_to_textbox('There is no URL for this song')
-    
-    def open_ytsearch(self):
-        wb = openpyxl.load_workbook(our_file + ".xlsx")
-        sheet = wb.active
-        artist = sheet.cell(row=song_index, column=3).value
-        song_name = sheet.cell(row=song_index, column=2).value
-        ytsearch = 'https://www.youtube.com/results?search_query='
-
-        if song_name is not None:
-            if artist is not None:
-                webbrowser.open(f'{ytsearch}{song_name} - {artist}')
-            else:
-                webbrowser.open(f'{ytsearch}{song_name}')
-        else:
-            self.write_to_textbox('No suitable search string')
 
     def next_song(self):
         global song_index, max_rows
@@ -209,18 +182,48 @@ class MyGUI:
             song_index = 0
         else:
             row = sheet[song_index]
-            artist = row[1].value
-            song_name = row[2].value
+            artist = row[2].value
+            song_name = row[1].value
             url = row[5].value
             source = row[4].value
 
             print(f'{artist}: {song_name}\n{url}')
-            self.write_to_textbox(f'{artist}: {song_name}   {song_index-1}/{max_rows-1}\n{url}\n{source}')
+            self.write_to_textbox(f'{song_name}: {artist}   {song_index-1}/{max_rows-1}\n{url}\n{source}')
+    
+    def open_aha(self):
+        wb = openpyxl.load_workbook(our_file + ".xlsx")
+        sheet = wb.active
+        url = sheet.cell(row=song_index, column=6).value
+
+        if url is not None:
+            webbrowser.open(url)
+        else:
+            self.write_to_textbox('There is no URL for this song')
+
+    def open_ytsearch(self):
+        wb = openpyxl.load_workbook(our_file + ".xlsx")
+        sheet = wb.active
+        row = sheet[song_index]
+        artist = row[2].value
+        song_name = row[1].value
+        ytsearch = 'https://www.youtube.com/results?search_query='
+
+        if song_name is not None:
+            if artist is not None:
+                webbrowser.open(f'{ytsearch}{song_name} - {artist}')
+            else:
+                webbrowser.open(f'{ytsearch}{song_name}')
+        else:
+            self.write_to_textbox('No suitable search string')
 
     def delete_song(self):
         global song_index, max_rows
         wb = openpyxl.load_workbook(our_file + ".xlsx")
         sheet = wb.active
+
+        row = sheet[song_index]
+        artist = row[2].value
+        song_name = row[1].value
 
         sheet.delete_rows(song_index)
         wb.save(our_file + ".xlsx")
@@ -228,7 +231,7 @@ class MyGUI:
 
         song_index -= 1
         max_rows -= 1
-        self.write_to_textbox('Song removed from file')
+        self.write_to_textbox(f'{song_name}: {artist} removed from file')
 
 
 if __name__ == '__main__':
